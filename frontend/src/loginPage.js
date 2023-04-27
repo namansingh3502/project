@@ -32,6 +32,7 @@ export default function LoginPage() {
           }
           else{
             alert("2FA not active. Redirecting to activation page.")
+            localStorage.setItem("platform", platform)
             navigate("activate_2fa", {replace: true});
           }
         }

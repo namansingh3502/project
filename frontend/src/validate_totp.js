@@ -6,7 +6,7 @@ export default function Validate_TOTP() {
   const [error, setError] = useState("")
   async function validate_totp() {
     let auth_token = localStorage.getItem("auth_token")
-    let data = {totp: totp, platform: "platform1"};
+    let data = {totp: totp, platform: localStorage.getItem("platform")};
     axios
       .post("api/validate_otp/", data, {
         headers: {

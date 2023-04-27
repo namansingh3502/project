@@ -6,12 +6,12 @@ export default function Activate2FA() {
   const [totp, setTotp] = useState("");
   const [loading, setLoading] = useState(true);
   const [shaKey, setShaKey] = useState("");
+  const [uri, setUri] = useState("")
   const [error, setError] = useState("");
 
   async function validate_totp() {
     let auth_token = localStorage.getItem("auth_token");
-    let data = {"totp": totp, "platform": "platform1"};
-
+    let data = {"totp": totp, "platform": localStorage.getItem("platform")};
     axios
       .post("api/validate_otp/", data, {
         headers: {
@@ -31,19 +31,23 @@ export default function Activate2FA() {
 
   async function generateKey() {
     let auth_token = localStorage.getItem("auth_token");
+    let platform = localStorage.getItem("platform")
 
     if (auth_token === undefined) {
       setError("Some error occured please try again later.");
     } else {
       axios
-        .get("api/generate_sha_key/SHA1", {
+        .get("api/generate_sha_key/SHA1/" + platform, {
           headers: {
             Authorization: auth_token,
+            'Content-Type': 'multipart/form-data'
           }
         })
         .then(function (response) {
           if (response.status === 200) {
+            console.log( "data", response.data )
             setShaKey(response.data.sha_key);
+            setUri(response.data.uri)
             setLoading(false);
           }
         })
@@ -82,7 +86,7 @@ export default function Activate2FA() {
                 <QRCode
                   className="h-auto w-40"
                   size={256}
-                  value={"sshKey"}
+                  value={uri}
                   viewBox={`0 0 256 256`}
                 />
               )}

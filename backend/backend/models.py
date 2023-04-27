@@ -38,16 +38,15 @@ class UserTOTPDetails(models.Model):
         'UserProfile',
         on_delete=models.CASCADE
     )
-    platform = models.CharField(
+    platform = models.ForeignKey(
         "Platform",
-        max_length=50,
-        blank=False,
-        null=False,
+        on_delete=models.CASCADE
     )
     delay = models.IntegerField(
         "Time delay",
         blank=False,
-        null=False
+        null=False,
+        default=0
     )
     key = models.CharField(
         "Key",
@@ -55,7 +54,26 @@ class UserTOTPDetails(models.Model):
         blank=True,
         null=False
     )
+    is_active = models.BooleanField(
+        "Is_active",
+        default=False,
+        blank=False,
+        null=False
+    )
 
     class Meta:
         db_table = "UserTOTPDetails"
         unique_together = ('user', 'platform')
+
+
+class Platform(models.Model):
+    name = models.CharField(
+        _("Platform Name"),
+        max_length=20
+    )
+
+    class Meta:
+        db_table = "Platform"
+
+    def __str__(self):
+        return self.name

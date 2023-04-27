@@ -4,11 +4,14 @@ import string
 
 import pyotp
 from coreapi.compat import force_text
+from django.contrib.auth import authenticate
 from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.views.decorators.csrf import csrf_exempt
+from djoser.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -30,6 +33,30 @@ KEY_SIZE = {
     "SHA256": 32,
     "SHA512": 64
 }
+
+
+@csrf_exempt
+def sign_in(request):
+    username = request.POST["username"]
+    password = request.POST["password"]
+    platform = request.POST["platform"]
+
+    user = authenticate(request, username=username, password=password)
+    token, _ = settings.TOKEN_MODEL.objects.get_or_create(user=user)
+    if user is None:
+        return JsonResponse({"msg": "Username or password incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        platform = Platform.objects.get(name=platform)
+        user_platform = UserTOTPDetails.objects.get(user=user, platform=platform, is_active=True)
+    except Platform.DoesNotExist:
+        return JsonResponse({"msg": "Platform does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+    except UserTOTPDetails.DoesNotExist:
+        return JsonResponse({"msg": "2FA not active", "is_active": False, "auth_token": str(token)},
+                            status=status.HTTP_200_OK)
+
+    return JsonResponse({"msg": "authenticated", "is_active": True, "auth_token": str(token)},
+                        status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -168,12 +195,16 @@ def mobile_verification(request):
 @permission_classes([IsAuthenticated])
 def validate_totp(request):
     data = request.data
-
     try:
-        credentials = UserTOTPDetails.objects.get(user_id=request.user.pk, platform=data["platform"])
+        platform = Platform.objects.get(name=data["platform"])
+        credentials = UserTOTPDetails.objects.get(user_id=request.user.pk, platform=platform)
         key = base64.b32encode(bytearray(credentials.key, 'ascii'))
         totp = pyotp.TOTP(key)
         is_valid = totp.verify(data["totp"])
+
+        if is_valid:
+            credentials.is_active = True
+            credentials.save()
 
     except Exception as e:
         print("errorr", e)
@@ -189,7 +220,7 @@ def validate_totp(request):
 
 @api_view(["get"])
 @permission_classes([IsAuthenticated])
-def generate_ssh_key(request, key_type):
+def generate_ssh_key(request, key_type, platform_name):
     """
     :param key_type: type of sha key to be used i.e. SHA1, SHA256, SHA526
     :param request:
@@ -198,32 +229,36 @@ def generate_ssh_key(request, key_type):
     """
 
     try:
-
         key_size = KEY_SIZE[key_type]
         sha_key = ''.join(secrets.choice(alphabet) for i in range(key_size))
     except Exception as e:
-        print("error ", e)
         return JsonResponse(
             {"Error": "Key type not supported"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
-        user = UserProfile.objects.get(id=1)
+        user = UserProfile.objects.get(pk=request.user.id)
+        platform = Platform.objects.get(name=platform_name)
+
+        UserTOTP = UserTOTPDetails.objects.get(
+            user=user,
+            platform=platform,
+        )
+        UserTOTP.key = sha_key
+        UserTOTP.save()
+    except Exception as e:
         UserTOTP = UserTOTPDetails.objects.create(
             user=user,
-            platform="client 2",
+            platform=platform,
             delay=0,
-            key=sha_key
+            key=sha_key,
+            is_active=False
         )
-    except Exception as e:
-        print("error ", e)
-        return JsonResponse(
-            {"Error": "Unable to register for TOTP."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    key = base64.b32encode(bytearray(sha_key, 'ascii'))
+    uri = pyotp.totp.TOTP(key).provisioning_uri(name="TOTP Platform", issuer_name=platform_name)
 
     return JsonResponse(
-        {"sha_key": sha_key},
+        {"sha_key": sha_key, "uri": str(uri)},
         status=status.HTTP_200_OK
     )

@@ -5,8 +5,10 @@ from . import views
 urlpatterns = [
     path('', include('djoser.urls')),
     path('', include('djoser.urls.authtoken')),
-    path("check_2fa", views.check_2fa, name="sign-in"),
-    path(r'generate_sha_key/<str:key_type>', views.generate_ssh_key, name="Generate_SSH_Key"),
+
+    path('sign_in/', views.sign_in, name="login"),
+    path(r'generate_sha_key/<str:key_type>/<str:platform_name>', views.generate_ssh_key, name="Generate_SSH_Key"),
+
     path('validate_otp/', views.validate_totp, name="Validate_TOTP"),
 
     path('user_regisration/', views.register_user, name="User_Registration"),

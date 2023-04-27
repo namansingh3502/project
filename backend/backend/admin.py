@@ -77,7 +77,7 @@ class UserProfileAdmin(UserAdmin):
 
 @admin.register(UserTOTPDetails)
 class UserTOTPDetails(admin.ModelAdmin):
-    list_display = ("user", "platform")
+    list_display = ("user", "platform", "is_active")
 
     list_filter = ("platform",)
 
@@ -87,7 +87,21 @@ class UserTOTPDetails(admin.ModelAdmin):
                 "user",
                 "platform",
                 "key",
-                "delay"
+                "delay",
+                "is_active"
+            )
+        }),
+    )
+
+
+@admin.register(Platform)
+class Platform(admin.ModelAdmin):
+    list_display = ("name",)
+
+    fieldsets = (
+        ("Platform Details", {
+            'fields': (
+                "name",
             )
         }),
     )

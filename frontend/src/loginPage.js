@@ -6,47 +6,34 @@ export default function LoginPage() {
   let navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [platform, setPlatform] = useState("");
   const [error, setError] = useState("")
 
-  async function check_2fa() {
-    let auth_token = localStorage.getItem("auth_token");
-
-    if (auth_token === undefined) {
-      setError("Some error occured please try again later.");
-    } else {
-      axios.get("api/check_2fa", {
-        headers: {
-          Authorization: auth_token,
-        }
-      })
-        .then((response) => {
-          console.log(response.data)
-          if (response.status === 200 && response.data.is_2fa_activated === true) {
-            navigate("validate_totp", {replace: true});
-          } else {
-            navigate("activate_2fa", {replace: true});
-            alert("Successfully logged in. 2FA no activated.")
-          }
-        })
-        .catch((error) => {
-          setError("Some error occurred. Please try again later.")
-          console.log("error ", error.response)
-        })
-    }
-  }
 
   async function validate_user() {
     let data = {
       username: username,
       password: password,
+      platform: platform
     };
 
     axios
-      .post("api/token/login/", data, {})
+      .post("api/sign_in/", data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
       .then(function (response) {
         if (response.status === 200) {
           localStorage.setItem("auth_token", "Token " + response.data.auth_token)
-          check_2fa();
+          console.log(response.data)
+          if( response.data.is_active ){
+            navigate("validate_totp", {replace: true});
+          }
+          else{
+            alert("2FA not active. Redirecting to activation page.")
+            navigate("activate_2fa", {replace: true});
+          }
         }
       })
       .catch(function (error) {
@@ -114,6 +101,26 @@ export default function LoginPage() {
                     className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
                   >
                     Password
+                  </label>
+                </div>
+                <div className="relative">
+                  <input
+                    autoComplete="off"
+                    id="platform"
+                    name="platform"
+                    type="text"
+                    className="peer placeholder-transparent h-12 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                    placeholder="Password"
+                    value={platform}
+                    onChange={(e) => {
+                      setPlatform(e.target.value);
+                    }}
+                  />
+                  <label
+                    htmlFor="platform"
+                    className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm"
+                  >
+                    Platform
                   </label>
                 </div>
                 <div className={"text-sm text-red-500"}>

@@ -237,10 +237,10 @@ def generate_ssh_key(request, key_type, platform_name):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    try:
-        user = UserProfile.objects.get(pk=request.user.id)
-        platform = Platform.objects.get(name=platform_name)
+    user = UserProfile.objects.get(pk=request.user.id)
+    platform = Platform.objects.get(name=platform_name)
 
+    try:
         UserTOTP = UserTOTPDetails.objects.get(
             user=user,
             platform=platform,
@@ -259,6 +259,6 @@ def generate_ssh_key(request, key_type, platform_name):
     uri = pyotp.totp.TOTP(key).provisioning_uri(name="TOTP Platform", issuer_name=platform_name)
 
     return JsonResponse(
-        {"sha_key": sha_key, "uri": str(uri)},
+        {"sha_key": str(key)[2:-1], "uri": str(uri)},
         status=status.HTTP_200_OK
     )

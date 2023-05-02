@@ -27,12 +27,13 @@ export default function LoginPage() {
         if (response.status === 200) {
           localStorage.setItem("auth_token", "Token " + response.data.auth_token)
           console.log(response.data)
+          localStorage.setItem("platform", platform)
+
           if( response.data.is_active ){
             navigate("validate_totp", {replace: true});
           }
           else{
             alert("2FA not active. Redirecting to activation page.")
-            localStorage.setItem("platform", platform)
             navigate("activate_2fa", {replace: true});
           }
         }

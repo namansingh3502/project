@@ -32522,39 +32522,32 @@ function LoginPage() {
     let navigate = (0, _reactRouterDom.useNavigate)();
     const [username, setUsername] = (0, _react.useState)("");
     const [password, setPassword] = (0, _react.useState)("");
+    const [platform, setPlatform] = (0, _react.useState)("");
     const [error, setError] = (0, _react.useState)("");
-    async function check_2fa() {
-        let auth_token = localStorage.getItem("auth_token");
-        if (auth_token === undefined) setError("Some error occured please try again later.");
-        else (0, _axiosDefault.default).get("api/check_2fa", {
-            headers: {
-                Authorization: auth_token
-            }
-        }).then((response)=>{
-            console.log(response.data);
-            if (response.status === 200 && response.data.is_2fa_activated === true) navigate("validate_totp", {
-                replace: true
-            });
-            else {
-                navigate("activate_2fa", {
-                    replace: true
-                });
-                alert("Successfully logged in. 2FA no activated.");
-            }
-        }).catch((error)=>{
-            setError("Some error occurred. Please try again later.");
-            console.log("error ", error.response);
-        });
-    }
     async function validate_user() {
         let data = {
             username: username,
-            password: password
+            password: password,
+            platform: platform
         };
-        (0, _axiosDefault.default).post("api/token/login/", data, {}).then(function(response) {
+        (0, _axiosDefault.default).post("api/sign_in/", data, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }).then(function(response) {
             if (response.status === 200) {
                 localStorage.setItem("auth_token", "Token " + response.data.auth_token);
-                check_2fa();
+                console.log(response.data);
+                localStorage.setItem("platform", platform);
+                if (response.data.is_active) navigate("validate_totp", {
+                    replace: true
+                });
+                else {
+                    alert("2FA not active. Redirecting to activation page.");
+                    navigate("activate_2fa", {
+                        replace: true
+                    });
+                }
             }
         }).catch(function(error) {
             if (error.response.status === 400) setError("Username or password incorrect.");
@@ -32570,7 +32563,7 @@ function LoginPage() {
                     className: "absolute inset-0 bg-gradient-to-r from-blue-300 to-blue-600 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"
                 }, void 0, false, {
                     fileName: "src/loginPage.js",
-                    lineNumber: 64,
+                    lineNumber: 53,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -32584,12 +32577,12 @@ function LoginPage() {
                                     children: "Sign in"
                                 }, void 0, false, {
                                     fileName: "src/loginPage.js",
-                                    lineNumber: 69,
+                                    lineNumber: 58,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "src/loginPage.js",
-                                lineNumber: 68,
+                                lineNumber: 57,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -32617,7 +32610,7 @@ function LoginPage() {
                                                     }
                                                 }, void 0, false, {
                                                     fileName: "src/loginPage.js",
-                                                    lineNumber: 80,
+                                                    lineNumber: 69,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
@@ -32626,13 +32619,13 @@ function LoginPage() {
                                                     children: "Username"
                                                 }, void 0, false, {
                                                     fileName: "src/loginPage.js",
-                                                    lineNumber: 92,
+                                                    lineNumber: 81,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/loginPage.js",
-                                            lineNumber: 79,
+                                            lineNumber: 68,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -32651,7 +32644,7 @@ function LoginPage() {
                                                     }
                                                 }, void 0, false, {
                                                     fileName: "src/loginPage.js",
-                                                    lineNumber: 100,
+                                                    lineNumber: 89,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
@@ -32660,13 +32653,47 @@ function LoginPage() {
                                                     children: "Password"
                                                 }, void 0, false, {
                                                     fileName: "src/loginPage.js",
-                                                    lineNumber: 112,
+                                                    lineNumber: 101,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "src/loginPage.js",
-                                            lineNumber: 99,
+                                            lineNumber: 88,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+                                            className: "relative",
+                                            children: [
+                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("input", {
+                                                    autoComplete: "off",
+                                                    id: "platform",
+                                                    name: "platform",
+                                                    type: "text",
+                                                    className: "peer placeholder-transparent h-12 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600",
+                                                    placeholder: "Password",
+                                                    value: platform,
+                                                    onChange: (e)=>{
+                                                        setPlatform(e.target.value);
+                                                    }
+                                                }, void 0, false, {
+                                                    fileName: "src/loginPage.js",
+                                                    lineNumber: 109,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
+                                                    htmlFor: "platform",
+                                                    className: "absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm",
+                                                    children: "Platform"
+                                                }, void 0, false, {
+                                                    fileName: "src/loginPage.js",
+                                                    lineNumber: 121,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "src/loginPage.js",
+                                            lineNumber: 108,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -32674,7 +32701,7 @@ function LoginPage() {
                                             children: error
                                         }, void 0, false, {
                                             fileName: "src/loginPage.js",
-                                            lineNumber: 119,
+                                            lineNumber: 128,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -32685,50 +32712,50 @@ function LoginPage() {
                                                 children: "Submit"
                                             }, void 0, false, {
                                                 fileName: "src/loginPage.js",
-                                                lineNumber: 123,
+                                                lineNumber: 132,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "src/loginPage.js",
-                                            lineNumber: 122,
+                                            lineNumber: 131,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/loginPage.js",
-                                    lineNumber: 72,
+                                    lineNumber: 61,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "src/loginPage.js",
-                                lineNumber: 71,
+                                lineNumber: 60,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "src/loginPage.js",
-                        lineNumber: 67,
+                        lineNumber: 56,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "src/loginPage.js",
-                    lineNumber: 66,
+                    lineNumber: 55,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "src/loginPage.js",
-            lineNumber: 63,
+            lineNumber: 52,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "src/loginPage.js",
-        lineNumber: 62,
+        lineNumber: 51,
         columnNumber: 5
     }, this);
 }
 exports.default = LoginPage;
-_s(LoginPage, "InRb++Ov/3P6SO3ncD/jVB24Bug=", false, function() {
+_s(LoginPage, "jR0s7XNK7xuzqquf6GUJNBAydTY=", false, function() {
     return [
         (0, _reactRouterDom.useNavigate)
     ];
@@ -36884,19 +36911,23 @@ function Activate2FA() {
     const [totp, setTotp] = (0, _react.useState)("");
     const [loading, setLoading] = (0, _react.useState)(true);
     const [shaKey, setShaKey] = (0, _react.useState)("");
+    const [uri, setUri] = (0, _react.useState)("");
     const [error, setError] = (0, _react.useState)("");
     async function validate_totp() {
         let auth_token = localStorage.getItem("auth_token");
         let data = {
             "totp": totp,
-            "platform": "platform1"
+            "platform": localStorage.getItem("platform")
         };
         (0, _axiosDefault.default).post("api/validate_otp/", data, {
             headers: {
                 Authorization: auth_token
             }
         }).then(function(response) {
-            if (response.status === 200) console.log("TOTP validated");
+            if (response.status === 200) {
+                if (response.data.is_valid) alert("TOTP Validated");
+                else alert("TOTP verification Failed");
+            }
         }).catch(function(error) {
             setError("Incorrect key. Please try again.");
             console.log(error.response);
@@ -36904,14 +36935,18 @@ function Activate2FA() {
     }
     async function generateKey() {
         let auth_token = localStorage.getItem("auth_token");
+        let platform = localStorage.getItem("platform");
         if (auth_token === undefined) setError("Some error occured please try again later.");
-        else (0, _axiosDefault.default).get("api/generate_sha_key/SHA1", {
+        else (0, _axiosDefault.default).get("api/generate_sha_key/SHA1/" + platform, {
             headers: {
-                Authorization: auth_token
+                Authorization: auth_token,
+                "Content-Type": "multipart/form-data"
             }
         }).then(function(response) {
             if (response.status === 200) {
+                console.log("data", response.data);
                 setShaKey(response.data.sha_key);
+                setUri(response.data.uri);
                 setLoading(false);
             }
         }).catch(function(error) {
@@ -36931,7 +36966,7 @@ function Activate2FA() {
                     className: "absolute inset-0 bg-gradient-to-r from-blue-300 to-blue-600 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"
                 }, void 0, false, {
                     fileName: "src/activate_2fa.js",
-                    lineNumber: 65,
+                    lineNumber: 74,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -36945,12 +36980,12 @@ function Activate2FA() {
                                     children: "Activate Two Factor Authentication"
                                 }, void 0, false, {
                                     fileName: "src/activate_2fa.js",
-                                    lineNumber: 70,
+                                    lineNumber: 79,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "src/activate_2fa.js",
-                                lineNumber: 69,
+                                lineNumber: 78,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -36961,26 +36996,26 @@ function Activate2FA() {
                                         className: "border-t-transparent border-solid animate-spin rounded-full border-blue-400 border-8 h-36 w-36"
                                     }, void 0, false, {
                                         fileName: "src/activate_2fa.js",
-                                        lineNumber: 78,
+                                        lineNumber: 87,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "src/activate_2fa.js",
-                                    lineNumber: 77,
+                                    lineNumber: 86,
                                     columnNumber: 17
                                 }, this) : /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _reactQrCodeDefault.default), {
                                     className: "h-auto w-40",
                                     size: 256,
-                                    value: "sshKey",
+                                    value: uri,
                                     viewBox: `0 0 256 256`
                                 }, void 0, false, {
                                     fileName: "src/activate_2fa.js",
-                                    lineNumber: 82,
+                                    lineNumber: 91,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "src/activate_2fa.js",
-                                lineNumber: 75,
+                                lineNumber: 84,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -36990,20 +37025,20 @@ function Activate2FA() {
                                         children: "Secret Key"
                                     }, void 0, false, {
                                         fileName: "src/activate_2fa.js",
-                                        lineNumber: 92,
+                                        lineNumber: 101,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                                         children: loading ? "Loading..." : shaKey
                                     }, void 0, false, {
                                         fileName: "src/activate_2fa.js",
-                                        lineNumber: 93,
+                                        lineNumber: 102,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/activate_2fa.js",
-                                lineNumber: 91,
+                                lineNumber: 100,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -37015,12 +37050,12 @@ function Activate2FA() {
                                             children: "Enter auth code"
                                         }, void 0, false, {
                                             fileName: "src/activate_2fa.js",
-                                            lineNumber: 98,
+                                            lineNumber: 107,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "src/activate_2fa.js",
-                                        lineNumber: 97,
+                                        lineNumber: 106,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("form", {
@@ -37048,7 +37083,7 @@ function Activate2FA() {
                                                         disabled: loading
                                                     }, void 0, false, {
                                                         fileName: "src/activate_2fa.js",
-                                                        lineNumber: 109,
+                                                        lineNumber: 118,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
@@ -37057,13 +37092,13 @@ function Activate2FA() {
                                                         children: "XXXXXX"
                                                     }, void 0, false, {
                                                         fileName: "src/activate_2fa.js",
-                                                        lineNumber: 128,
+                                                        lineNumber: 137,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "src/activate_2fa.js",
-                                                lineNumber: 108,
+                                                lineNumber: 117,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -37074,51 +37109,51 @@ function Activate2FA() {
                                                     children: "Submit"
                                                 }, void 0, false, {
                                                     fileName: "src/activate_2fa.js",
-                                                    lineNumber: 136,
+                                                    lineNumber: 145,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "src/activate_2fa.js",
-                                                lineNumber: 135,
+                                                lineNumber: 144,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "src/activate_2fa.js",
-                                        lineNumber: 101,
+                                        lineNumber: 110,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "src/activate_2fa.js",
-                                lineNumber: 96,
+                                lineNumber: 105,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "src/activate_2fa.js",
-                        lineNumber: 68,
+                        lineNumber: 77,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "src/activate_2fa.js",
-                    lineNumber: 67,
+                    lineNumber: 76,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "src/activate_2fa.js",
-            lineNumber: 64,
+            lineNumber: 73,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "src/activate_2fa.js",
-        lineNumber: 63,
+        lineNumber: 72,
         columnNumber: 5
     }, this);
 }
 exports.default = Activate2FA;
-_s(Activate2FA, "n64ZgDchk329IChpVqWdxC+74qQ=");
+_s(Activate2FA, "4JZEkCjdCYwSasDf5rTct7QQh1Q=");
 _c = Activate2FA;
 var _c;
 $RefreshReg$(_c, "Activate2FA");
@@ -40113,7 +40148,7 @@ function Validate_TOTP() {
         let auth_token = localStorage.getItem("auth_token");
         let data = {
             totp: totp,
-            platform: "platform1"
+            platform: localStorage.getItem("platform")
         };
         (0, _axiosDefault.default).post("api/validate_otp/", data, {
             headers: {

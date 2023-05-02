@@ -20,7 +20,12 @@ export default function Activate2FA() {
       })
       .then(function (response) {
         if (response.status === 200) {
-          console.log("TOTP validated");
+          if(response.data.is_valid){
+            alert("TOTP Validated")
+          }
+          else{
+            alert("TOTP verification Failed")
+          }
         }
       })
       .catch(function (error) {

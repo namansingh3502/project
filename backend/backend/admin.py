@@ -54,10 +54,7 @@ class UserProfileAdmin(UserAdmin):
         ('Profile', {
             'fields': (
                 'first_name',
-                'middle_name',
                 'last_name',
-                'gender',
-                'department',
                 'email',
                 'phone',
 

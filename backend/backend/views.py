@@ -195,19 +195,18 @@ def mobile_verification(request):
 @permission_classes([IsAuthenticated])
 def validate_totp(request):
     data = request.data
+    is_valid = False
     try:
         platform = Platform.objects.get(name=data["platform"])
         credentials = UserTOTPDetails.objects.get(user_id=request.user.pk, platform=platform)
         key = base64.b32encode(bytearray(credentials.key, 'ascii'))
         totp = pyotp.TOTP(key)
         is_valid = totp.verify(data["totp"])
-
         if is_valid:
             credentials.is_active = True
             credentials.save()
 
     except Exception as e:
-        print("errorr", e)
         return JsonResponse(
             {"msg": "Some error occured"},
             status=status.HTTP_400_BAD_REQUEST

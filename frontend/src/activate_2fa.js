@@ -125,10 +125,7 @@ export default function Activate2FA() {
                     value={totp}
                     maxLength={6}
                     onChange={(e) => {
-                      if (
-                        (e.target.value >= "0" && e.target.value <= "9") ||
-                        e.target.value === ""
-                      ) {
+                      if ( !isNaN(e.target.value) ) {
                         setTotp(e.target.value);
                       }
                     }}

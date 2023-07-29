@@ -80,16 +80,15 @@ def register_user(request):
 
     form = RegistrationForm(request.POST)
 
-    if form.is_valid():
-        user = form.save(commit=False)
-        user.is_active = False
-        user.save()
-
-    else:
+    if not form.is_valid():
         return JsonResponse(
             {'msg': form.errors.values()},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    user = form.save(commit=False)
+    user.is_active = False
+    user.save()
 
     return JsonResponse(
         {'msg': "User Registration Successful."},
@@ -229,7 +228,7 @@ def generate_ssh_key(request, key_type, platform_name):
 
     try:
         key_size = KEY_SIZE[key_type]
-        sha_key = ''.join(secrets.choice(alphabet) for i in range(key_size))
+        sha_key = ''.join(secrets.choice(alphabet) for _ in range(key_size))
     except Exception as e:
         return JsonResponse(
             {"Error": "Key type not supported"},
